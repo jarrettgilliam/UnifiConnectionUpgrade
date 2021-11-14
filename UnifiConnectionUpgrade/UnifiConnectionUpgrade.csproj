@@ -5,4 +5,9 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="KoenZomers.UniFi.Api" Version="1.1.11" />
+  </ItemGroup>
+
 </Project>
