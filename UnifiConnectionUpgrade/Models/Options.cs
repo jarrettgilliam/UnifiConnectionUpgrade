@@ -15,7 +15,7 @@ namespace UnifiConnectionUpgrade.Models
         [Option('p', "password", Required = true, HelpText = "The password to log in with.")]
         public string Password { get; set; }
 
-        [Option('m', "minimum-signal-strength", Default = -70, HelpText = "The minimum signal strength to force a client to reconnect.")]
+        [Option('m', "minimum-signal-strength", Default = -55, HelpText = "The minimum signal strength to force a client to reconnect.")]
         public int? MinimumSignalStrength { get; set; }
 
         [Option('i', "insecure-tls", Default = false, HelpText = "Skips TLS validation.")]
