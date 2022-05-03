@@ -30,7 +30,7 @@ class Program
                 throw new Exception("Unable to authenticate.");
             }
 
-            foreach (Clients client in await uniFiApi.GetActiveClients())
+            foreach (Clients? client in await uniFiApi.GetActiveClients())
             {
                 if (ShouldReconnect(client, options))
                 {
@@ -45,7 +45,7 @@ class Program
         }
     }
 
-    static bool ShouldReconnect(Clients client, Options options)
+    static bool ShouldReconnect(Clients? client, Options options)
     {
         if (client == null)
         {
