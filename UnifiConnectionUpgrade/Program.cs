@@ -1,26 +1,30 @@
-﻿using System;
+﻿namespace UnifiConnectionUpgrade;
+
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommandLine;
 using KoenZomers.UniFi.Api.Responses;
 using UnifiConnectionUpgrade.Models;
+using Newtonsoft.Json;
 
-namespace UnifiConnectionUpgrade;
-
-class Program
+internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(ReconnectClients);
     }
 
-    static async Task ReconnectClients(Options options)
+    private static async Task ReconnectClients(Options options)
     {
         try
         {
+            MergeOptions(options);
+            
             var uniFiApi = new KoenZomers.UniFi.Api.Api(options.BaseUri);
 
-            if (options.InsecureTLS)
+            if (options.InsecureTLS == true)
             {
                 uniFiApi.DisableSslValidation();
             }
@@ -45,7 +49,7 @@ class Program
         }
     }
 
-    static bool ShouldReconnect(Clients? client, Options options)
+    private static bool ShouldReconnect(Clients? client, Options options)
     {
         if (client == null)
         {
@@ -67,11 +71,25 @@ class Program
             return false;
         }
 
-        if (options.ExcludedMacs?.Any(s => string.Equals(s, client.MacAddress, StringComparison.OrdinalIgnoreCase)) == true)
+        if (options.ExcludedMacs.Any(s => string.Equals(s, client.MacAddress, StringComparison.OrdinalIgnoreCase)))
         {
             return false;
         }
 
         return true;
+    }
+
+    private static void MergeOptions(Options options)
+    {
+        if (!string.IsNullOrEmpty(options.OptionsFile))
+        {
+            options.Merge(
+                JsonConvert.DeserializeObject<Options>(
+                    File.ReadAllText(options.OptionsFile)));
+        }
+        
+        options.Merge(Options.Default);
+        
+        options.ThrowIfInvalid();
     }
 }
