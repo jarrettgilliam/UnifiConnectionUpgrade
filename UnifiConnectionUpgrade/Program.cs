@@ -1,8 +1,10 @@
 ﻿namespace UnifiConnectionUpgrade;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using CommandLine;
 using KoenZomers.UniFi.Api.Responses;
@@ -11,6 +13,9 @@ using Newtonsoft.Json;
 
 internal class Program
 {
+    private const int NUMBER_OF_RETRIES = 5;
+    private static readonly TimeSpan RETRY_DELAY = TimeSpan.FromSeconds(5);
+
     private static async Task Main(string[] args)
     {
         await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(ReconnectClients);
@@ -21,7 +26,7 @@ internal class Program
         try
         {
             MergeOptions(options);
-            
+
             var uniFiApi = new KoenZomers.UniFi.Api.Api(options.BaseUri);
 
             if (options.InsecureTLS == true)
@@ -29,17 +34,39 @@ internal class Program
                 uniFiApi.DisableSslValidation();
             }
 
-            if (!await uniFiApi.Authenticate(options.Username, options.Password))
+            bool success = false;
+            List<Exception> exceptions = new();
+
+            for (int i = 0; i < NUMBER_OF_RETRIES; i++)
             {
-                throw new Exception("Unable to authenticate.");
+                try
+                {
+                    if (!await uniFiApi.Authenticate(options.Username, options.Password))
+                    {
+                        throw new Exception("Unable to authenticate.");
+                    }
+
+                    foreach (Clients? client in await uniFiApi.GetActiveClients())
+                    {
+                        if (ShouldReconnect(client, options))
+                        {
+                            await uniFiApi.ReconnectClient(client.MacAddress);
+                        }
+                    }
+
+                    success = true;
+                    break;
+                }
+                catch (Exception ex) when (ex is JsonReaderException or WebException)
+                {
+                    exceptions.Add(ex);
+                    await Task.Delay(RETRY_DELAY);
+                }
             }
 
-            foreach (Clients? client in await uniFiApi.GetActiveClients())
+            if (!success)
             {
-                if (ShouldReconnect(client, options))
-                {
-                    await uniFiApi.ReconnectClient(client.MacAddress);
-                }
+                throw new AggregateException(exceptions);
             }
         }
         catch (Exception ex)
@@ -87,9 +114,9 @@ internal class Program
                 JsonConvert.DeserializeObject<Options>(
                     File.ReadAllText(options.OptionsFile)));
         }
-        
+
         options.Merge(Options.Default);
-        
+
         options.ThrowIfInvalid();
     }
 }
