@@ -13,7 +13,7 @@ internal class Options
         MinimumSignalStrength = -55,
         InsecureTLS = false
     };
-        
+
     [Option('b', "base-uri", HelpText = "The base URI to the UniFi controller.")]
     public Uri? BaseUri { get; set; }
 
@@ -31,7 +31,10 @@ internal class Options
 
     [Option('e', "exclude-mac", HelpText = "A list of MAC addresses to exclude. Useful for clients that only support 2.4 GHz WiFi.")]
     public IEnumerable<string> ExcludedMacs { get; set; } = Array.Empty<string>();
-        
+
+    [Option('s', "exclude-ssid", HelpText = "A list of SSIDs to exclude.")]
+    public IEnumerable<string> ExcludedSSIDs { get; set; } = Array.Empty<string>();
+
     [JsonIgnore]
     [Option('o', "options-file", HelpText = "The path to a JSON formatted options file.")]
     public string? OptionsFile { get; set; }
@@ -44,6 +47,7 @@ internal class Options
         this.MinimumSignalStrength ??= other.MinimumSignalStrength;
         this.InsecureTLS ??= other.InsecureTLS;
         this.ExcludedMacs = this.ExcludedMacs.Concat(other.ExcludedMacs);
+        this.ExcludedSSIDs = this.ExcludedSSIDs.Concat(other.ExcludedSSIDs);
     }
 
     public void ThrowIfInvalid()

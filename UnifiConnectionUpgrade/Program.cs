@@ -103,6 +103,11 @@ internal class Program
             return false;
         }
 
+        if (options.ExcludedSSIDs.Any(s => string.Equals(s, client.EssId, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
         return true;
     }
 
