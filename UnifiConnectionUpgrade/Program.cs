@@ -121,7 +121,7 @@ internal class Program
             nameof(UnifiConnectionUpgrade),
             "config.json");
 
-        if (File.Exists(defaultOptionsFile))
+        if (defaultOptionsFile != options.OptionsFile && File.Exists(defaultOptionsFile))
         {
             options.Merge(
                 JsonConvert.DeserializeObject<Options>(
