@@ -1,7 +1,8 @@
 {
   "profiles": {
     "UnifiConnectionUpgrade": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": ""
     }
   }
 }

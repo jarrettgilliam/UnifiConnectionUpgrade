@@ -31,7 +31,7 @@ internal class Program
 
             if (options.InsecureTLS == true)
             {
-                LogVerbose(options, "Disabling TLS validation");
+                LogVerbose(options, "Skipping TLS validation.");
                 uniFiApi.DisableSslValidation();
             }
 
@@ -116,30 +116,21 @@ internal class Program
 
     private static void MergeOptions(Options options)
     {
-        if (!string.IsNullOrEmpty(options.OptionsFile))
-        {
-            options.OptionsFile = Path.GetFullPath(options.OptionsFile);
+        string optionsFile = !string.IsNullOrEmpty(options.OptionsFile)
+            ? Path.GetFullPath(options.OptionsFile)
+            : Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".config",
+                nameof(UnifiConnectionUpgrade),
+                "config.json");
 
-            options.Merge(
-                JsonConvert.DeserializeObject<Options>(
-                    File.ReadAllText(options.OptionsFile)));
-
-            LogVerbose(options, $"Loaded options from {options.OptionsFile}");
-        }
-
-        string defaultOptionsFile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".config",
-            nameof(UnifiConnectionUpgrade),
-            "config.json");
-
-        if (defaultOptionsFile != options.OptionsFile && File.Exists(defaultOptionsFile))
+        if (File.Exists(optionsFile))
         {
             options.Merge(
                 JsonConvert.DeserializeObject<Options>(
-                    File.ReadAllText(defaultOptionsFile)));
+                    File.ReadAllText(optionsFile)));
 
-            LogVerbose(options, $"Loaded options from {defaultOptionsFile}");
+            LogVerbose(options, $"Loaded options from {optionsFile}");
         }
 
         options.Merge(Options.Default);

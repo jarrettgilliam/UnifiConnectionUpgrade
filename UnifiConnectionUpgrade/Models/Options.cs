@@ -36,7 +36,7 @@ internal class Options
     public IEnumerable<string> ExcludedSSIDs { get; set; } = Array.Empty<string>();
 
     [JsonIgnore]
-    [Option('o', "options-file", HelpText = "The path to a JSON formatted options file.")]
+    [Option('o', "options-file", HelpText = "The path to a JSON formatted options file. Defaults to ~/.config/UnifiConnectionUpgrade/config.json.")]
     public string? OptionsFile { get; set; }
 
     [Option('v', "verbose", HelpText = "Prints all messages to standard output.")]
