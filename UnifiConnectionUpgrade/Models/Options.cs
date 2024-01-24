@@ -39,6 +39,9 @@ internal class Options
     [Option('o', "options-file", HelpText = "The path to a JSON formatted options file.")]
     public string? OptionsFile { get; set; }
 
+    [Option('v', "verbose", HelpText = "Prints all messages to standard output.")]
+    public bool Verbose { get; set; }
+
     public void Merge(Options other)
     {
         this.BaseUri ??= other.BaseUri;
@@ -48,6 +51,7 @@ internal class Options
         this.InsecureTLS ??= other.InsecureTLS;
         this.ExcludedMacs = this.ExcludedMacs.Concat(other.ExcludedMacs);
         this.ExcludedSSIDs = this.ExcludedSSIDs.Concat(other.ExcludedSSIDs);
+        this.Verbose = this.Verbose || other.Verbose;
     }
 
     public void ThrowIfInvalid()

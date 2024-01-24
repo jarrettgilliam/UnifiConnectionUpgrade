@@ -31,6 +31,7 @@ internal class Program
 
             if (options.InsecureTLS == true)
             {
+                LogVerbose(options, "Disabling TLS validation");
                 uniFiApi.DisableSslValidation();
             }
 
@@ -50,6 +51,7 @@ internal class Program
                     {
                         if (ShouldReconnect(client, options))
                         {
+                            LogVerbose(options, $"Reconnecting {client.Hostname ?? client.MacAddress}");
                             await uniFiApi.ReconnectClient(client.MacAddress);
                         }
                     }
@@ -60,6 +62,7 @@ internal class Program
                 catch (Exception ex) when (ex is JsonReaderException or WebException)
                 {
                     exceptions.Add(ex);
+                    LogVerbose(options, $"An exception occurred, retrying in {RETRY_DELAY.TotalSeconds} seconds.");
                     await Task.Delay(RETRY_DELAY);
                 }
             }
@@ -115,9 +118,13 @@ internal class Program
     {
         if (!string.IsNullOrEmpty(options.OptionsFile))
         {
+            options.OptionsFile = Path.GetFullPath(options.OptionsFile);
+
             options.Merge(
                 JsonConvert.DeserializeObject<Options>(
                     File.ReadAllText(options.OptionsFile)));
+
+            LogVerbose(options, $"Loaded options from {options.OptionsFile}");
         }
 
         string defaultOptionsFile = Path.Combine(
@@ -131,10 +138,20 @@ internal class Program
             options.Merge(
                 JsonConvert.DeserializeObject<Options>(
                     File.ReadAllText(defaultOptionsFile)));
+
+            LogVerbose(options, $"Loaded options from {defaultOptionsFile}");
         }
 
         options.Merge(Options.Default);
 
         options.ThrowIfInvalid();
+    }
+
+    private static void LogVerbose(Options options, string message)
+    {
+        if (options.Verbose)
+        {
+            Console.WriteLine(message);
+        }
     }
 }
