@@ -115,6 +115,19 @@ internal class Program
                     File.ReadAllText(options.OptionsFile)));
         }
 
+        string defaultOptionsFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".config",
+            nameof(UnifiConnectionUpgrade),
+            "config.json");
+
+        if (File.Exists(defaultOptionsFile))
+        {
+            options.Merge(
+                JsonConvert.DeserializeObject<Options>(
+                    File.ReadAllText(defaultOptionsFile)));
+        }
+
         options.Merge(Options.Default);
 
         options.ThrowIfInvalid();
