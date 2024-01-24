@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CommandLine;
 using KoenZomers.UniFi.Api.Responses;
 using UnifiConnectionUpgrade.Models;
-using Newtonsoft.Json;
 
 internal class Program
 {
@@ -18,10 +18,10 @@ internal class Program
 
     private static async Task Main(string[] args)
     {
-        await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(ReconnectClients);
+        await Parser.Default.ParseArguments<OptionsModel>(args).WithParsedAsync(ReconnectClients);
     }
 
-    private static async Task ReconnectClients(Options options)
+    private static async Task ReconnectClients(OptionsModel options)
     {
         try
         {
@@ -59,7 +59,7 @@ internal class Program
                     success = true;
                     break;
                 }
-                catch (Exception ex) when (ex is JsonReaderException or WebException)
+                catch (Exception ex) when (ex is WebException)
                 {
                     exceptions.Add(ex);
                     LogVerbose(options, $"An exception occurred, retrying in {RETRY_DELAY.TotalSeconds} seconds.");
@@ -79,7 +79,7 @@ internal class Program
         }
     }
 
-    private static bool ShouldReconnect(Clients? client, Options options)
+    private static bool ShouldReconnect(Clients? client, OptionsModel options)
     {
         if (client == null)
         {
@@ -114,7 +114,7 @@ internal class Program
         return true;
     }
 
-    private static void MergeOptions(Options options)
+    private static void MergeOptions(OptionsModel options)
     {
         string optionsFile = !string.IsNullOrEmpty(options.OptionsFile)
             ? Path.GetFullPath(options.OptionsFile)
@@ -127,18 +127,19 @@ internal class Program
         if (File.Exists(optionsFile))
         {
             options.Merge(
-                JsonConvert.DeserializeObject<Options>(
-                    File.ReadAllText(optionsFile)));
+                JsonSerializer.Deserialize(
+                    File.ReadAllText(optionsFile),
+                    OptionsJsonSerializerContext.Default.OptionsModel));
 
             LogVerbose(options, $"Loaded options from {optionsFile}");
         }
 
-        options.Merge(Options.Default);
+        options.Merge(OptionsModel.Default);
 
         options.ThrowIfInvalid();
     }
 
-    private static void LogVerbose(Options options, string message)
+    private static void LogVerbose(OptionsModel options, string message)
     {
         if (options.Verbose)
         {

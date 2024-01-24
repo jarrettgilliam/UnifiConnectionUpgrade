@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using CommandLine;
 
-internal class Options
+internal class OptionsModel
 {
-    public static Options Default => new()
+    public static OptionsModel Default => new()
     {
         MinimumSignalStrength = -55,
         InsecureTLS = false
@@ -42,8 +42,13 @@ internal class Options
     [Option('v', "verbose", HelpText = "Prints all messages to standard output.")]
     public bool Verbose { get; set; }
 
-    public void Merge(Options other)
+    public void Merge(OptionsModel? other)
     {
+        if (other is null)
+        {
+            return;
+        }
+
         this.BaseUri ??= other.BaseUri;
         this.Username ??= other.Username;
         this.Password ??= other.Password;
